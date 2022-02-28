@@ -1,0 +1,36 @@
+name: Gradle publish
+
+on:
+  workflow_call:
+    inputs:
+      javadoc_path:
+        description: 'path to javadocs'
+        default: 'api/build/docs/javadoc'
+        required: false
+        type: string
+    secrets:
+      JORISG_REPO_USERNAME:
+        required: true
+      JORISG_REPO_PASSWORD:
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Generate javadoc
+        run: './gradlew javadoc'
+        env:
+          ORG_GRADLE_PROJECT_JorisgUsername: ${{ secrets.JORISG_REPO_USERNAME }}
+          ORG_GRADLE_PROJECT_JorisgPassword: ${{ secrets.JORISG_REPO_PASSWORD }}
+      - name: Deploy github pages
+        uses: JamesIves/github-pages-deploy-action@v4.2.5
+        with:
+          branch: javadocs
+          folder: ${{ inputs.javadoc_path }}
